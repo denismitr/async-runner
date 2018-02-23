@@ -9,25 +9,25 @@ interface Runnable
 
     public function getPid(): ?int;
 
-    public function start(): void;
+    public function start(): Runnable;
 
-    public function then(callable $cb);
+    public function then(callable $cb): Runnable;
 
-    public function catch(callable $cb);
+    public function catch(callable $cb): Runnable;
 
-    public function timeout(callable $cb);
+    public function timeout(callable $cb): Runnable;
 
-    public function stop(): void;
+    public function stop(): Runnable;
 
     public function getOutput();
 
     public function getErrorOutput();
 
-    public function triggerSuccess();
+    public function triggerSuccess(): void;
 
-    public function triggerError();
+    public function triggerError(): void;
 
-    public function triggerTimeout();
+    public function triggerTimeout(): void;
 
     public function getCurrentExecutionTime(): float;
 }
