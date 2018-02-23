@@ -19,11 +19,20 @@ interface Runnable
 
     public function stop(): Runnable;
 
+    /**
+     * @return mixed
+     */
     public function getOutput();
 
+    /**
+     * @return mixed
+     */
     public function getErrorOutput();
 
-    public function triggerSuccess(): void;
+    /**
+     * @return mixed
+     */
+    public function triggerSuccess();
 
     public function triggerError(): void;
 

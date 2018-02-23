@@ -4,6 +4,9 @@ namespace Denismitr\Async;
 
 
 use ArrayAccess;
+use Denismitr\Async\Process\ParallelProcess;
+use Denismitr\Async\Process\SynchronousProcess;
+use Denismitr\Async\Runtime\ParentRuntime;
 use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
@@ -113,6 +116,10 @@ class Pool implements ArrayAccess
         $this->putInProgress($process);
     }
 
+    /**
+     * @param $process
+     * @return Runnable
+     */
     public function add($process): Runnable
     {
         if ( ! is_callable($process) && ! $process instanceof Runnable) {
@@ -130,9 +137,81 @@ class Pool implements ArrayAccess
         return $process;
     }
 
+    public function wait(?callable $intermediateCallback = null): array
+    {
+        while ($this->inProgress) {
+            foreach ($this->inProgress as $process) {
+                if ($process->getCurrentExecutionTime() > $this->timeout) {
+                    $this->markAsFinished($process);
+                }
+
+                if ($process instanceof SynchronousProcess) {
+                    $this->markAsFinished($process);
+                }
+            }
+
+            if ( ! $this->inProgress) {
+                break;
+            }
+
+            if ($intermediateCallback) {
+                call_user_func_array($intermediateCallback, [$this]);
+            }
+
+            usleep($this->sleepTime);
+        }
+
+        return $this->results;
+    }
+
+    public function putInProgress(Runnable $process): void
+    {
+        if ($process instanceof ParallelProcess) {
+            $process->getProcess()->setTimeout($this->timeout);
+        }
+
+        $process->start();
+
+        unset($this->queue[$process->getId()]);
+
+        $this->inProgress[$process->getPid()] = $process;
+    }
+
+    public function markAsFinished(Runnable $process)
+    {
+        unset($this->inProgress[$process->getPid()]);
+
+        $this->notify();
+
+        $this->results[] = $process->triggerSuccess();
+        $this->finished[$process->getPid()] = $process;
+    }
+
+    public function markAsTimeout(Runnable $process)
+    {
+        unset($this->inProgress[$process->getPid()]);
+
+        $this->notify();
+
+        $process->triggerTimeout();
+
+        $this->timeouts[$process->getPid()] = $process;
+    }
+
+    public function markAsFailed(Runnable $process): void
+    {
+        unset($this->inProgress[$process->getPid()]);
+
+        $this->notify();
+
+        $process->triggerError();
+
+        $this->failed[$process->getPid()] = $process;
+    }
+
     public function offsetExists($offset)
     {
-        // TODO: Implement offsetExists() method.
+        return false;
     }
 
     public function offsetGet($offset)
@@ -195,5 +274,39 @@ class Pool implements ArrayAccess
     public function getTimeouts(): array
     {
         return $this->timeouts;
+    }
+
+    public function state(): PoolState
+    {
+        return $this->state;
+    }
+
+    protected function registerListener()
+    {
+        pcntl_async_signals(true);
+
+        pcntl_signal(SIGCHLD, function ($signo, $status) {
+            while (true) {
+                $pid = pcntl_waitpid(-1, $processState, WNOHANG | WUNTRACED);
+
+                if ($pid <= 0) {
+                    break;
+                }
+
+                $process = $this->inProgress[$pid] ?? null;
+
+                if ( ! $process) {
+                    continue;
+                }
+
+                if ($status['status'] === 0) {
+                    $this->markAsFinished($process);
+
+                    continue;
+                }
+
+                $this->markAsFailed($process);
+            }
+        });
     }
 }

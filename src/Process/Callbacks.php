@@ -51,7 +51,10 @@ trait Callbacks
         return $this;
     }
 
-    public function triggerSuccess(): void
+    /**
+     * @return mixed
+     */
+    public function triggerSuccess()
     {
         if ($this->getErrorOutput()) {
             $this->triggerError();
@@ -64,6 +67,8 @@ trait Callbacks
         foreach ($this->successCallbacks as $callback) {
             call_user_func_array($callback, [$output]);
         }
+
+        return $output;
     }
 
     public function triggerError(): void
