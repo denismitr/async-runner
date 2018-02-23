@@ -1,0 +1,41 @@
+{
+    "name": "denismitr/async-php",
+    "description": "Run PHP code asynchronously with the PCNTL extension",
+    "keywords": ["async", "pcntl", "concurrency", "denismitr"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Denis Mitrofanov",
+            "email": "denis.mitr@gmail.com",
+            "homepage": "https://thecollection.ru"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "symfony/process": "^3.3 || ^4.0"
+    },
+    "require-dev": {
+        "larapack/dd": "^1.1",
+        "phpunit/phpunit": "^6.0",
+        "symfony/stopwatch": "^4.0"
+    },
+    "autoload": {
+        "files": [
+            "scr/helpers.php"
+        ],
+        "psr-4": {
+            "Denismitr\\Async\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Denismitr\\Async\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
