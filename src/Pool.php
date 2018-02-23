@@ -4,6 +4,7 @@ namespace Denismitr\Async;
 
 
 use ArrayAccess;
+use Denismitr\Async\Contracts\Runnable;
 
 class Pool implements ArrayAccess
 {
@@ -13,6 +14,36 @@ class Pool implements ArrayAccess
     protected $tasksPerProcess = 1;
     protected $timeout = 300;
     protected $sleepTime = 50000;
+
+    /** @var Runnable[] */
+    protected $queues = [];
+
+    /** @var Runnable[] */
+    protected $inProgress = [];
+
+    /** @var Runnable[] */
+    protected $finished = [];
+
+    /** @var Runnable[] */
+    protected $failed = [];
+
+    /** @var Runnable[] */
+    protected $timeouts = [];
+
+    protected $results = [];
+
+    /**
+     * @var PoolState
+     */
+    protected $state;
+
+    /**
+     * Pool constructor.
+     */
+    public function __construct()
+    {
+        $this->state = new PoolState($this);
+    }
 
     /**
      * @return Pool
@@ -99,5 +130,45 @@ class Pool implements ArrayAccess
     public function offsetUnset($offset)
     {
         // TODO: Implement offsetUnset() method.
+    }
+
+    /**
+     * @return Runnable[]
+     */
+    public function getQueues(): array
+    {
+        return $this->queues;
+    }
+
+    /**
+     * @return Runnable[]
+     */
+    public function getInProgress(): array
+    {
+        return $this->inProgress;
+    }
+
+    /**
+     * @return Runnable[]
+     */
+    public function getFinished(): array
+    {
+        return $this->finished;
+    }
+
+    /**
+     * @return Runnable[]
+     */
+    public function getFailed(): array
+    {
+        return $this->failed;
+    }
+
+    /**
+     * @return Runnable[]
+     */
+    public function getTimeouts(): array
+    {
+        return $this->timeouts;
     }
 }
