@@ -46,6 +46,8 @@ class Pool implements ArrayAccess
      */
     public function __construct()
     {
+        $this->registerListener();
+
         $this->state = new PoolState($this);
     }
 
