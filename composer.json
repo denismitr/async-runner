@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": "^7.1",
+        "opis/closure": "^3.0",
         "symfony/process": "^3.3 || ^4.0"
     },
     "require-dev": {

@@ -4,6 +4,7 @@ namespace Denismitr\Async;
 
 
 use ArrayAccess;
+use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
 class Pool implements ArrayAccess
@@ -16,7 +17,7 @@ class Pool implements ArrayAccess
     protected $sleepTime = 50000;
 
     /** @var Runnable[] */
-    protected $queues = [];
+    protected $queue = [];
 
     /** @var Runnable[] */
     protected $inProgress = [];
@@ -112,6 +113,23 @@ class Pool implements ArrayAccess
         $this->putInProgress($process);
     }
 
+    public function add($process): Runnable
+    {
+        if ( ! is_callable($process) && ! $process instanceof Runnable) {
+            throw new InvalidArgumentException(
+                "The process passed to Pool::add should be callable or implement the Runnable interface."
+            );
+        }
+
+        if ( ! $process instanceof Runnable ) {
+            $process = ParentRuntime::createProcess($process);
+        }
+
+        $this->putInQueue($process);
+
+        return $process;
+    }
+
     public function offsetExists($offset)
     {
         // TODO: Implement offsetExists() method.
@@ -132,12 +150,19 @@ class Pool implements ArrayAccess
         // TODO: Implement offsetUnset() method.
     }
 
+    public function putInQueue(Runnable $process): void
+    {
+        $this->queue[$process->getId()] = $process;
+
+        $this->notify();
+    }
+
     /**
      * @return Runnable[]
      */
-    public function getQueues(): array
+    public function getQueue(): array
     {
-        return $this->queues;
+        return $this->queue;
     }
 
     /**
