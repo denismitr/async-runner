@@ -22,7 +22,7 @@
     },
     "autoload": {
         "files": [
-            "scr/helpers.php"
+            "src/helpers.php"
         ],
         "psr-4": {
             "Denismitr\\Async\\": "src/"
@@ -34,7 +34,7 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit"
+        "test": "php vendor/bin/phpunit"
     },
     "config": {
         "sort-packages": true

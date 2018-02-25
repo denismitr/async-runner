@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Async Test Suite" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.414140">
+    <testsuite name="Denismitr\Async\Tests\PoolStateTest" file="/home/vagrant/Code/repos/async/tests/PoolStateTest.php" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.414140">
+      <testcase name="it_can_show_a_textual_state" class="Denismitr\Async\Tests\PoolStateTest" classname="Denismitr.Async.Tests.PoolStateTest" file="/home/vagrant/Code/repos/async/tests/PoolStateTest.php" line="12" assertions="1" time="0.095530"/>
+      <testcase name="it_can_show_a_textual_failed_status" class="Denismitr\Async\Tests\PoolStateTest" classname="Denismitr.Async.Tests.PoolStateTest" file="/home/vagrant/Code/repos/async/tests/PoolStateTest.php" line="22" assertions="3" time="0.318610"/>
+    </testsuite>
+  </testsuite>
+</testsuites>
