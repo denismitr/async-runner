@@ -27,8 +27,8 @@ try {
 
     $outputLength = 1024 * 10;
 
-    if (strlen($serializedOutput) > $output) {
-        throw \Denismitr\Async\Exceptions\ParallelException::outputTooLarge($outputLength);
+    if (strlen($serializedOutput) > $outputLength) {
+        throw \Denismitr\Async\Exceptions\ParallelException::outputTooLarge(strlen($serializedOutput), $outputLength);
     }
 
     fwrite(STDOUT, $serializedOutput);

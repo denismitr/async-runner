@@ -16,13 +16,14 @@ class ParallelException extends Exception
     }
 
     /**
-     * @param int $bytes
+     * @param int $actual
+     * @param int $max
      * @return ParallelException
      */
-    public static function outputTooLarge(int $bytes): self
+    public static function outputTooLarge(int $actual, int $max): self
     {
         return new self(
-            "The output returned by this child process is too large. The serialized output may only be $bytes bytes long."
+            "The output size of {$actual} bytes, returned by the child process is too large. The serialized output may only be {$max} bytes long."
         );
     }
 }

@@ -75,6 +75,8 @@ class SynchronousProcess implements Runnable
         } catch (Throwable $t) {
             $this->errorOutput = $t;
         }
+
+        return $this;
     }
 
     public function stop(): Runnable

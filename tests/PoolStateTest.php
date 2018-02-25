@@ -2,7 +2,7 @@
 
 namespace Denismitr\Async\Tests;
 
-
+use InvalidArgumentException;
 use Denismitr\Async\Pool;
 use PHPUnit\Framework\TestCase;
 

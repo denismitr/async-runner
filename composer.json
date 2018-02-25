@@ -1,7 +1,7 @@
 {
-    "name": "denismitr/async-php",
-    "description": "Run PHP code asynchronously with the PCNTL extension",
-    "keywords": ["async", "pcntl", "concurrency", "denismitr"],
+    "name": "denismitr/async-tasks",
+    "description": "Run PHP tasks asynchronously with the PCNTL extension",
+    "keywords": ["async", "tasks", "pcntl", "concurrency", "denismitr"],
     "license": "MIT",
     "authors": [
         {

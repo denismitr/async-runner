@@ -232,9 +232,9 @@ class Pool implements ArrayAccess
         // TODO: Implement offsetGet() method.
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $task)
     {
-        // TODO: Implement offsetSet() method.
+        $this->add($task);
     }
 
     public function offsetUnset($offset)
