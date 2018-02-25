@@ -93,6 +93,17 @@ class Pool implements ArrayAccess
     }
 
     /**
+     * @param string $autoloader
+     * @return Pool
+     */
+    public function autoload(string $autoloader): self
+    {
+        ParentRuntime::init($autoloader);
+
+        return $this;
+    }
+
+    /**
      * @param int $sleepTime
      * @return Pool
      */
@@ -144,7 +155,7 @@ class Pool implements ArrayAccess
         while ($this->inProgress) {
             foreach ($this->inProgress as $process) {
                 if ($process->getCurrentExecutionTime() > $this->timeout) {
-                    $this->markAsFinished($process);
+                    $this->markAsTimeout($process);
                 }
 
                 if ($process instanceof SynchronousProcess) {

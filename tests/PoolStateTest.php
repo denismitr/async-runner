@@ -51,6 +51,6 @@ class PoolStateTest extends TestCase
 
         $pool->wait();
 
-        $this->assertContains('timeout: 5', (string) $pool->status());
+        $this->assertContains('timeouts: 5', (string) $pool->state());
     }
 }
