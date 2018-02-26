@@ -1,5 +1,5 @@
 {
-    "name": "denismitr/async",
+    "name": "denismitr/runner",
     "description": "Run PHP tasks asynchronously with the PCNTL extension",
     "keywords": ["async", "tasks", "pcntl", "concurrency", "denismitr"],
     "license": "MIT",

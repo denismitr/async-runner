@@ -58,19 +58,19 @@ class WaitGroupTest extends TestCase
     public function it_can_handle_success()
     {
         $wg = WaitGroup::make();
-        $counter = 0;
+        $profit = 0;
 
-        foreach (range(1, 5) as $i) {
+        foreach (range(1, 10) as $i) {
             $wg->add(function () {
-                return 2;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output;
+                return 5;
+            })->then(function (int $result) use (&$profit) {
+                $profit += $result;
             });
         }
 
         $wg->wait();
 
-        $this->assertEquals(10, $counter, (string) $wg->state());
+        $this->assertEquals(50, $profit, (string) $wg->state());
     }
 
     /** @test */
