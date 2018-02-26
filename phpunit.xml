@@ -10,7 +10,7 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Async Test Suite">
+        <testsuite name="Wait Group Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
