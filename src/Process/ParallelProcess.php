@@ -10,10 +10,8 @@ use Throwable;
 use Denismitr\Async\Contracts\Runnable;
 use Symfony\Component\Process\Process;
 
-class ParallelProcess implements Runnable
+class ParallelProcess extends ProcessAbstract
 {
-    use Callbacks;
-
     /**
      * @var Process
      */
@@ -129,6 +127,9 @@ class ParallelProcess implements Runnable
         return $this->process->isTerminated();
     }
 
+    /**
+     * @return mixed
+     */
     public function getOutput()
     {
         if (! $this->output) {

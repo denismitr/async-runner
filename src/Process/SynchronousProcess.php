@@ -3,11 +3,16 @@
 namespace Denismitr\Async\Process;
 
 
+use Denismitr\Async\Exceptions\SerializableException;
 use Denismitr\Async\TaskAbstract;
 use Throwable;
 use Denismitr\Async\Contracts\Runnable;
 
-class SynchronousProcess implements Runnable
+/**
+ * Class SynchronousProcess
+ * @package Denismitr\Async\Process
+ */
+class SynchronousProcess extends ProcessAbstract
 {
     /**
      * @var int
@@ -22,8 +27,6 @@ class SynchronousProcess implements Runnable
      * @var float
      */
     protected $executionTime;
-
-    use Callbacks;
 
     /**
      * SynchronousProcess constructor.
@@ -62,6 +65,9 @@ class SynchronousProcess implements Runnable
         return $this->getId();
     }
 
+    /**
+     * @return Runnable
+     */
     public function start(): Runnable
     {
         try {
@@ -79,23 +85,49 @@ class SynchronousProcess implements Runnable
         return $this;
     }
 
+    /**
+     * @return Runnable
+     */
     public function stop(): Runnable
     {
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
     public function getOutput()
     {
         return $this->output;
     }
 
+    /**
+     * @return mixed
+     */
     public function getErrorOutput()
     {
         return $this->errorOutput;
     }
 
+    /**
+     * @return float
+     */
     public function getCurrentExecutionTime(): float
     {
         return $this->executionTime;
+    }
+
+    /**
+     * @return mixed|Throwable
+     */
+    protected function resolveErrorOutput()
+    {
+        $exception = $this->getErrorOutput();
+
+        if ($exception instanceof SerializableException) {
+            $exception = $exception->asThrowable();
+        }
+
+        return $exception;
     }
 }

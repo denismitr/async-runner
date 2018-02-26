@@ -1,11 +1,17 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: User
+ * Date: 26.02.2018
+ * Time: 12:49
+ */
 
 namespace Denismitr\Async\Process;
 
 
 use Denismitr\Async\Contracts\Runnable;
 
-trait Callbacks
+abstract class ProcessAbstract implements Runnable
 {
     /**
      * @var callable[]
@@ -22,6 +28,12 @@ trait Callbacks
      */
     protected $timeoutCallbacks = [];
 
+    abstract protected function resolveErrorOutput();
+
+    /**
+     * @param callable $callback
+     * @return Runnable
+     */
     public function then(callable $callback): Runnable
     {
         $this->successCallbacks[] = $callback;

@@ -12,6 +12,7 @@ use Denismitr\Async\Contracts\Runnable;
 
 class WaitGroup implements ArrayAccess
 {
+    /** @var bool */
     public static $forceSync = false;
 
     protected $concurrency = 20;
@@ -36,9 +37,7 @@ class WaitGroup implements ArrayAccess
 
     protected $results = [];
 
-    /**
-     * @var State
-     */
+    /** @var State */
     protected $state;
 
     /**
@@ -112,21 +111,6 @@ class WaitGroup implements ArrayAccess
         $this->sleepTime = $sleepTime;
 
         return $this;
-    }
-
-    public function update(): void
-    {
-        if (count($this->inProgress) >= $this->concurrency) {
-            return;
-        }
-
-        $process = array_shift($this->queue);
-
-        if (!$process) {
-            return;
-        }
-
-        $this->putInProgress($process);
     }
 
     /**
@@ -314,6 +298,21 @@ class WaitGroup implements ArrayAccess
     public function state(): State
     {
         return $this->state;
+    }
+
+    protected function update(): void
+    {
+        if (count($this->inProgress) >= $this->concurrency) {
+            return;
+        }
+
+        $process = array_shift($this->queue);
+
+        if (!$process) {
+            return;
+        }
+
+        $this->putInProgress($process);
     }
 
     protected function registerListener()
