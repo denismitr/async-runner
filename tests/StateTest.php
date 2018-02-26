@@ -2,6 +2,7 @@
 
 namespace Denismitr\Async\Tests;
 
+use Denismitr\Async\Tests\Stubs\TestTask;
 use InvalidArgumentException;
 use Denismitr\Async\WaitGroup;
 use PHPUnit\Framework\TestCase;

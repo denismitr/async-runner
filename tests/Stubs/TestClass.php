@@ -1,7 +1,9 @@
 <?php
 
-namespace Denismitr\Async\Tests;
+namespace Denismitr\Async\Tests\Stubs;
 
+
+use Denismitr\Async\Tests\Exceptions\TestException;
 
 class TestClass
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Denismitr\Async\Tests;
+namespace Denismitr\Async\Tests\Stubs;
 
 
 use Denismitr\Async\TaskAbstract;

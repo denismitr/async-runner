@@ -3,6 +3,10 @@
 namespace Denismitr\Async\Tests;
 
 
+use Denismitr\Async\Tests\Stubs\Invokable;
+use Denismitr\Async\Tests\Stubs\NonInvokable;
+use Denismitr\Async\Tests\Stubs\TestClass;
+use Denismitr\Async\Tests\Stubs\TestTask;
 use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Process\SynchronousProcess;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +31,7 @@ class WaitGroupTest extends TestCase
     }
     
     /** @test */
-    public function it_can_tun_porocess_in_parallel()
+    public function it_can_tun_processes_in_parallel()
     {
         $wg = WaitGroup::make();
 
