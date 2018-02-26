@@ -1,6 +1,6 @@
 <?php
 
-use Denismitr\Async\Pool;
+use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Contracts\Runnable;
 use Denismitr\Async\Runtime\ParentRuntime;
 use Denismitr\Async\TaskAbstract;
@@ -17,12 +17,12 @@ if (! function_exists('async')) {
 
     if (! function_exists('await')) {
         /**
-         * @param Pool $pool
+         * @param WaitGroup $wg
          * @return array
          */
-        function await(Pool $pool): array
+        function await(WaitGroup $wg): array
         {
-            return $pool->wait();
+            return $wg->wait();
         }
     }
 }

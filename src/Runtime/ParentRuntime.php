@@ -4,7 +4,7 @@ namespace Denismitr\Async\Runtime;
 
 use Closure;
 use Denismitr\Async\Contracts\Runnable;
-use Denismitr\Async\Pool;
+use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Process\ParallelProcess;
 use Denismitr\Async\Process\SynchronousProcess;
 use Opis\Closure\SerializableClosure;
@@ -63,7 +63,7 @@ class ParentRuntime
             self::init();
         }
 
-        if ( ! Pool::isSupported()) {
+        if ( ! WaitGroup::isSupported()) {
             return SynchronousProcess::create($task, self::getId());
         }
 

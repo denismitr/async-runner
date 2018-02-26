@@ -10,7 +10,7 @@ use Denismitr\Async\Runtime\ParentRuntime;
 use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
-class Pool implements ArrayAccess
+class WaitGroup implements ArrayAccess
 {
     public static $forceSync = false;
 
@@ -37,24 +37,24 @@ class Pool implements ArrayAccess
     protected $results = [];
 
     /**
-     * @var PoolState
+     * @var State
      */
     protected $state;
 
     /**
-     * Pool constructor.
+     * WaitGroup constructor.
      */
     public function __construct()
     {
         $this->registerListener();
 
-        $this->state = new PoolState($this);
+        $this->state = new State($this);
     }
 
     /**
-     * @return Pool
+     * @return WaitGroup
      */
-    public static function create(): Pool
+    public static function make(): WaitGroup
     {
         return new static();
     }
@@ -72,9 +72,9 @@ class Pool implements ArrayAccess
 
     /**
      * @param int $timeout
-     * @return Pool
+     * @return WaitGroup
      */
-    public function timeout(int $timeout): self
+    public function setTimeout(int $timeout): self
     {
         $this->timeout = $timeout;
 
@@ -83,7 +83,7 @@ class Pool implements ArrayAccess
 
     /**
      * @param int $concurrency
-     * @return Pool
+     * @return WaitGroup
      */
     public function concurrency(int $concurrency): self
     {
@@ -94,7 +94,7 @@ class Pool implements ArrayAccess
 
     /**
      * @param string $autoloader
-     * @return Pool
+     * @return WaitGroup
      */
     public function autoload(string $autoloader): self
     {
@@ -105,7 +105,7 @@ class Pool implements ArrayAccess
 
     /**
      * @param int $sleepTime
-     * @return Pool
+     * @return WaitGroup
      */
     public function sleepTime(int $sleepTime): self
     {
@@ -114,7 +114,7 @@ class Pool implements ArrayAccess
         return $this;
     }
 
-    public function notify(): void
+    public function update(): void
     {
         if (count($this->inProgress) >= $this->concurrency) {
             return;
@@ -137,7 +137,7 @@ class Pool implements ArrayAccess
     {
         if ( ! is_callable($process) && ! $process instanceof Runnable) {
             throw new InvalidArgumentException(
-                "The process passed to Pool::add should be callable or implement the Runnable interface."
+                "The process passed to WaitGroup::add should be callable or implement the Runnable interface."
             );
         }
 
@@ -150,6 +150,10 @@ class Pool implements ArrayAccess
         return $process;
     }
 
+    /**
+     * @param callable|null $intermediateCallback
+     * @return array
+     */
     public function wait(?callable $intermediateCallback = null): array
     {
         while ($this->inProgress) {
@@ -177,6 +181,9 @@ class Pool implements ArrayAccess
         return $this->results;
     }
 
+    /**
+     * @param Runnable $process
+     */
     public function putInProgress(Runnable $process): void
     {
         if ($process instanceof ParallelProcess) {
@@ -190,32 +197,41 @@ class Pool implements ArrayAccess
         $this->inProgress[$process->getPid()] = $process;
     }
 
+    /**
+     * @param Runnable $process
+     */
     public function markAsFinished(Runnable $process)
     {
         unset($this->inProgress[$process->getPid()]);
 
-        $this->notify();
+        $this->update();
 
         $this->results[] = $process->triggerSuccess();
         $this->finished[$process->getPid()] = $process;
     }
 
+    /**
+     * @param Runnable $process
+     */
     public function markAsTimeout(Runnable $process)
     {
         unset($this->inProgress[$process->getPid()]);
 
-        $this->notify();
+        $this->update();
 
         $process->triggerTimeout();
 
         $this->timeouts[$process->getPid()] = $process;
     }
 
+    /**
+     * @param Runnable $process
+     */
     public function markAsFailed(Runnable $process): void
     {
         unset($this->inProgress[$process->getPid()]);
 
-        $this->notify();
+        $this->update();
 
         $process->triggerError();
 
@@ -242,11 +258,14 @@ class Pool implements ArrayAccess
         // TODO: Implement offsetUnset() method.
     }
 
+    /**
+     * @param Runnable $process
+     */
     public function putInQueue(Runnable $process): void
     {
         $this->queue[$process->getId()] = $process;
 
-        $this->notify();
+        $this->update();
     }
 
     /**
@@ -289,7 +308,10 @@ class Pool implements ArrayAccess
         return $this->timeouts;
     }
 
-    public function state(): PoolState
+    /**
+     * @return State
+     */
+    public function state(): State
     {
         return $this->state;
     }

@@ -3,15 +3,15 @@
 namespace Denismitr\Async\Tests;
 
 use InvalidArgumentException;
-use Denismitr\Async\Pool;
+use Denismitr\Async\WaitGroup;
 use PHPUnit\Framework\TestCase;
 
-class PoolStateTest extends TestCase
+class stateTest extends TestCase
 {
     /** @test */
     public function it_can_show_a_textual_state()
     {
-        $pool = Pool::create();
+        $pool = WaitGroup::make();
 
         $pool->add(new TestTask());
 
@@ -21,7 +21,7 @@ class PoolStateTest extends TestCase
     /** @test */
     public function it_can_show_a_textual_failed_status()
     {
-        $pool = Pool::create();
+        $pool = WaitGroup::make();
 
         foreach(range(1, 5) as $i) {
             $pool->add(function () {
@@ -41,7 +41,7 @@ class PoolStateTest extends TestCase
     /** @test */
     public function it_can_show_timeout_status()
     {
-        $pool = Pool::create()->timeout(0);
+        $pool = WaitGroup::make()->setTimeout(0);
 
         foreach (range(1, 5) as $i) {
             $pool->add(function () {

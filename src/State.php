@@ -6,20 +6,20 @@ namespace Denismitr\Async;
 use Denismitr\Async\Exceptions\SerializableException;
 use Denismitr\Async\Process\ParallelProcess;
 
-class PoolState
+class State
 {
     /**
-     * @var Pool
+     * @var WaitGroup
      */
-    private $pool;
+    private $wg;
 
     /**
-     * PoolState constructor.
-     * @param Pool $pool
+     * State constructor.
+     * @param WaitGroup $wg
      */
-    public function __construct(Pool $pool)
+    public function __construct(WaitGroup $wg)
     {
-        $this->pool = $pool;
+        $this->wg = $wg;
     }
 
     /**
@@ -47,10 +47,10 @@ class PoolState
      */
     protected function summaryToString(): string
     {
-        $queue = $this->pool->getQueue();
-        $finished = $this->pool->getFinished();
-        $failed = $this->pool->getFailed();
-        $timeouts = $this->pool->getTimeouts();
+        $queue = $this->wg->getQueue();
+        $finished = $this->wg->getFinished();
+        $failed = $this->wg->getFailed();
+        $timeouts = $this->wg->getTimeouts();
 
         return
             'queue: '.count($queue)
@@ -64,7 +64,7 @@ class PoolState
      */
     protected function failedToString(): string
     {
-        return (string) array_reduce($this->pool->getFailed(), function ($currentState, ParallelProcess $process) {
+        return (string) array_reduce($this->wg->getFailed(), function ($currentState, ParallelProcess $process) {
             $output = $process->getErrorOutput();
 
             if ($output instanceof SerializableException) {

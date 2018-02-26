@@ -3,12 +3,12 @@
 namespace Denismitr\Async\Tests;
 
 
-use Denismitr\Async\Pool;
+use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Process\SynchronousProcess;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-class PoolTest extends TestCase
+class WaitGroupTest extends TestCase
 {
     /** @var \Symfony\Component\Stopwatch\Stopwatch */
     protected $stopwatch;
@@ -17,7 +17,7 @@ class PoolTest extends TestCase
     {
         parent::setUp();
 
-        $supported = Pool::isSupported();
+        $supported = WaitGroup::isSupported();
 
         if ( ! $supported) {
             $this->markTestSkipped('Extensions `posix` and `pcntl` are not supported.');
@@ -29,100 +29,100 @@ class PoolTest extends TestCase
     /** @test */
     public function it_can_tun_porocess_in_parallel()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
         $this->stopwatch->start('test');
 
         foreach (range(1, 5) as $i) {
-            $pool->add(function () {
+            $wg->add(function () {
                 usleep(1000);
             });
         }
 
-        $pool->wait();
+        $wg->wait();
 
         $stopwatchResult = $this->stopwatch->stop('test');
 
         $this->assertLessThan(
             900,
             $stopwatchResult->getDuration(),
-            "Execution time was {$stopwatchResult->getDuration()}, expected less than 400.\n".(string) $pool->state()
+            "Execution time was {$stopwatchResult->getDuration()}, expected less than 400.\n".(string) $wg->state()
         );
     }
 
     /** @test */
     public function it_can_handle_success()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $pool->add(function () {
+            $wg->add(function () {
                 return 2;
             })->then(function (int $output) use (&$counter) {
                 $counter += $output;
             });
         }
 
-        $pool->wait();
+        $wg->wait();
 
-        $this->assertEquals(10, $counter, (string) $pool->state());
+        $this->assertEquals(10, $counter, (string) $wg->state());
     }
 
     /** @test */
     public function it_can_handle_timeout()
     {
-        $pool = Pool::create()
-            ->timeout(1);
+        $wg = WaitGroup::make()
+            ->setTimeout(1);
 
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $pool->add(function () {
+            $wg->add(function () {
                 sleep(2);
             })->timeout(function () use (&$counter) {
                 $counter += 1;
             });
         }
 
-        $pool->wait();
+        $wg->wait();
 
-        $this->assertEquals(5, $counter, (string) $pool->state());
+        $this->assertEquals(5, $counter, (string) $wg->state());
     }
 
     /** @test */
     public function it_can_handle_a_maximum_of_concurrent_processes()
     {
-        $pool = Pool::create()
+        $wg = WaitGroup::make()
             ->concurrency(2);
 
         $startTime = microtime(true);
 
         foreach (range(1, 3) as $i) {
-            $pool->add(function () {
+            $wg->add(function () {
                 sleep(1);
             });
         }
 
-        $pool->wait();
+        $wg->wait();
 
         $endTime = microtime(true);
 
         $executionTime = $endTime - $startTime;
 
-        $this->assertGreaterThanOrEqual(2, $executionTime, "Execution time was {$executionTime}, expected more than 2.\n".(string) $pool->state());
-        $this->assertCount(3, $pool->getFinished(), (string) $pool->state());
+        $this->assertGreaterThanOrEqual(2, $executionTime, "Execution time was {$executionTime}, expected more than 2.\n".(string) $wg->state());
+        $this->assertCount(3, $wg->getFinished(), (string) $wg->state());
     }
 
     /** @test */
     public function it_works_with_helper_functions()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $pool[] = async(function () {
+            $wg[] = async(function () {
                 usleep(random_int(10, 1000));
                 return 2;
             })->then(function (int $output) use (&$counter) {
@@ -130,20 +130,20 @@ class PoolTest extends TestCase
             });
         }
 
-        await($pool);
+        await($wg);
 
-        $this->assertEquals(10, $counter, (string) $pool->state());
+        $this->assertEquals(10, $counter, (string) $wg->state());
     }
 
     /** @test */
     public function it_can_use_a_class_from_the_parent_process()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
         /** @var TestClass $result */
         $result = null;
 
-        $pool[] = async(function () {
+        $wg[] = async(function () {
             $class = new TestClass();
 
             $class->property = true;
@@ -153,7 +153,7 @@ class PoolTest extends TestCase
             $result = $class;
         });
 
-        await($pool);
+        await($wg);
 
         $this->assertInstanceOf(TestClass::class, $result);
         $this->assertTrue($result->property);
@@ -162,17 +162,17 @@ class PoolTest extends TestCase
     /** @test */
     public function it_returns_all_the_output_as_an_array()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
         $result = null;
 
         foreach (range(1, 5) as $i) {
-            $pool[] = async(function () {
+            $wg[] = async(function () {
                 return 2;
             });
         }
 
-        $result = await($pool);
+        $result = await($wg);
 
         $this->assertCount(5, $result);
         $this->assertEquals(10, array_sum($result));
@@ -181,23 +181,23 @@ class PoolTest extends TestCase
     /** @test */
     public function it_can_work_with_tasks()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool[] = async(new TestTask());
+        $wg[] = async(new TestTask());
 
-        $results = await($pool);
+        $results = await($wg);
 
         $this->assertEquals(2, $results[0]);
     }
 
     /** @test */
-    public function it_can_accept_tasks_with_pool_add()
+    public function it_can_accept_tasks_with_wg_add()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool->add(new TestTask());
+        $wg->add(new TestTask());
 
-        $results = await($pool);
+        $results = await($wg);
 
         $this->assertEquals(2, $results[0]);
     }
@@ -205,17 +205,17 @@ class PoolTest extends TestCase
     /** @test */
     public function it_can_check_for_asynchronous_support()
     {
-        $this->assertTrue(Pool::isSupported());
+        $this->assertTrue(WaitGroup::isSupported());
     }
 
     /** @test */
     public function it_can_run_invokable_classes()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool->add(new Invokable());
+        $wg->add(new Invokable());
 
-        $results = await($pool);
+        $results = await($wg);
         $this->assertEquals(2, $results[0]);
     }
 
@@ -224,19 +224,19 @@ class PoolTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool->add(new NonInvokable());
+        $wg->add(new NonInvokable());
     }
 
     public function it_can_run_synchronous_processes()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
         $this->stopwatch->start('test');
 
         foreach (range(1, 3) as $i) {
-            $pool->add(new SynchronousProcess(function () {
+            $wg->add(new SynchronousProcess(function () {
                 sleep(1);
                 return 2;
             }, $i))->then(function ($output) {
@@ -244,41 +244,41 @@ class PoolTest extends TestCase
             });
         }
 
-        $pool->wait();
+        $wg->wait();
 
         $stopwatchResult = $this->stopwatch->stop('test');
 
-        $this->assertGreaterThan(3000, $stopwatchResult->getDuration(), "Execution time was {$stopwatchResult->getDuration()}, expected less than 3000.\n".(string) $pool->status());
+        $this->assertGreaterThan(3000, $stopwatchResult->getDuration(), "Execution time was {$stopwatchResult->getDuration()}, expected less than 3000.\n".(string) $wg->status());
     }
 
     /** @test */
     public function it_will_automatically_schedule_synchronous_tasks_if_pcntl_not_supported()
     {
-        Pool::$forceSync = true;
+        WaitGroup::$forceSync = true;
 
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool[] = async(new TestTask())->then(function ($output) {
+        $wg[] = async(new TestTask())->then(function ($output) {
             $this->assertEquals(0, $output);
         });
 
-        await($pool);
+        await($wg);
 
-        Pool::$forceSync = false;
+        WaitGroup::$forceSync = false;
     }
 
     /** @test */
     public function it_takes_an_intermediate_callback()
     {
-        $pool = Pool::create();
+        $wg = WaitGroup::make();
 
-        $pool[] = async(function () {
+        $wg[] = async(function () {
             return 1;
         });
 
         $isIntermediateCallbackCalled = false;
 
-        $pool->wait(function (Pool $pool) use (&$isIntermediateCallbackCalled) {
+        $wg->wait(function (WaitGroup $wg) use (&$isIntermediateCallbackCalled) {
             $isIntermediateCallbackCalled = true;
         });
 

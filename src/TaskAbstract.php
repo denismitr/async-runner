@@ -2,7 +2,10 @@
 
 namespace Denismitr\Async;
 
-
+/**
+ * Class TaskAbstract
+ * @package Denismitr\Async
+ */
 abstract class TaskAbstract
 {
     abstract public function configure();
