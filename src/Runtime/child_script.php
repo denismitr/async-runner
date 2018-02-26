@@ -1,6 +1,6 @@
 <?php
 
-use Denismitr\Async\Runtime\ParentRuntime;
+use Denismitr\Async\Runtime\RuntimeManager;
 
 try {
     $autoloader = $argv[1] ?? null;
@@ -20,7 +20,7 @@ try {
 
     require_once $autoloader;
 
-    $task = ParentRuntime::decodeTask($serializedClosure);
+    $task = RuntimeManager::decodeTask($serializedClosure);
 
     $output = call_user_func($task);
     $serializedOutput = base64_encode(serialize($output));

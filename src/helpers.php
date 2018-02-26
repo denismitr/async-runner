@@ -2,7 +2,7 @@
 
 use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Contracts\Runnable;
-use Denismitr\Async\Runtime\ParentRuntime;
+use Denismitr\Async\Runtime\RuntimeManager;
 use Denismitr\Async\TaskAbstract;
 
 if (! function_exists('async')) {
@@ -12,7 +12,7 @@ if (! function_exists('async')) {
      */
     function async($task): Runnable
     {
-        return ParentRuntime::createProcess($task);
+        return RuntimeManager::createProcess($task);
     }
 
     if (! function_exists('await')) {

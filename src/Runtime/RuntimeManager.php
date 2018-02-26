@@ -12,7 +12,7 @@ use function Opis\Closure\serialize;
 use function Opis\Closure\unserialize;
 use Symfony\Component\Process\Process;
 
-class ParentRuntime
+class RuntimeManager
 {
     /** @var bool */
     protected static $isInitialised = false;
@@ -52,7 +52,7 @@ class ParentRuntime
         }
 
         self::$autoloader = $autoloader;
-        self::$childProcessScript = __DIR__.'/ChildRuntime.php';
+        self::$childProcessScript = __DIR__ . '/child_script.php';
 
         self::$isInitialised = true;
     }

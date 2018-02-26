@@ -7,12 +7,12 @@ use Opis\Closure\SerializableClosure;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
-class ChildRuntimeTest extends TestCase
+class ChildScriptTest extends TestCase
 {
     /** @test */
     public function it_runs()
     {
-        $bootstrap = __DIR__.'/../src/Runtime/ChildRuntime.php';
+        $bootstrap = __DIR__ . '/../src/Runtime/child_script.php';
         $autoloader = __DIR__.'/../vendor/autoload.php';
 
         $serializedClosure = base64_encode(serialize(new SerializableClosure(function () {

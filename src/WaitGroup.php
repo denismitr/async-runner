@@ -6,7 +6,7 @@ namespace Denismitr\Async;
 use ArrayAccess;
 use Denismitr\Async\Process\ParallelProcess;
 use Denismitr\Async\Process\SynchronousProcess;
-use Denismitr\Async\Runtime\ParentRuntime;
+use Denismitr\Async\Runtime\RuntimeManager;
 use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
@@ -97,7 +97,7 @@ class WaitGroup implements ArrayAccess
      */
     public function autoload(string $autoloader): self
     {
-        ParentRuntime::init($autoloader);
+        RuntimeManager::init($autoloader);
 
         return $this;
     }
@@ -126,7 +126,7 @@ class WaitGroup implements ArrayAccess
         }
 
         if ( ! $process instanceof Runnable ) {
-            $process = ParentRuntime::createProcess($process);
+            $process = RuntimeManager::createProcess($process);
         }
 
         $this->putInQueue($process);
