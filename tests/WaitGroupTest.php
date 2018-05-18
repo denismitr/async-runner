@@ -77,21 +77,21 @@ class WaitGroupTest extends TestCase
     public function it_can_handle_timeout()
     {
         $wg = WaitGroup::create()
-            ->setTimeout(1);
+            ->setTimeout(3);
 
-        $counter = 0;
+        $timedOut = 0;
 
         foreach (range(1, 5) as $i) {
-            $wg->add(function () {
-                sleep(2);
-            })->timeout(function () use (&$counter) {
-                $counter += 1;
+            $wg->add(function () use ($i) {
+                sleep($i);
+            })->timeout(function () use (&$timedOut) {
+                $timedOut += 1;
             });
         }
 
         $wg->wait();
 
-        $this->assertEquals(5, $counter, (string) $wg->state());
+        $this->assertEquals(3, $timedOut, (string) $wg->state());
     }
 
     /** @test */

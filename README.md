@@ -57,20 +57,52 @@ foreach($results as $result) {
 }
 ```
 
-You can pass an intermediate callback to wait command
-
+You can check the result of each task by id, to help preserve the order
 ```php
 $wg = WaitGroup::create();
 
-$wg->add(function () {
-    return 1;
-});
+$idA = $wg->add(new TestAsyncTask('foo'))->getId();
+$idB = $wg->add(new TestAsyncTask('bar'))->getId();
+$idC = $wg->add(new TestAsyncTask('baz'))->getId();
 
-$isIntermediateCallbackCalled = false;
+$results = $wg->wait();
 
-$wg->wait(function (WaitGroup $wg) use (&$isIntermediateCallbackCalled) {
-    $isIntermediateCallbackCalled = true;
-});
+$this->assertEquals('foo', $results[$idA]);
+$this->assertEquals('bar', $results[$idB]);
+$this->assertEquals('baz', $results[$idC]);
+```
 
-$this->assertTrue($isIntermediateCallbackCalled);
+You can set max concurrent processes limit
+
+```php
+$wg = WaitGroup::create()->setMaxConcurrently(2);
+
+$startTime = microtime(true);
+
+foreach (range(1, 3) as $i) {
+    $wg->add(function () {
+        sleep(1);
+    });
+}
+
+$wg->wait(); // Will run only 2 tasks in parallell, then the 3rd one
+```
+
+You can set a timeout
+```php
+$wg = WaitGroup::create()->setTimeout(3);
+
+$timedOut = 0;
+
+foreach (range(1, 5) as $i) {
+    $wg->add(function () use ($i) {
+        sleep($i);
+    })->timeout(function () use (&$timedOut) {
+        $timedOut += 1;
+    });
+}
+
+$wg->wait();
+
+$this->assertEquals(3, $timedOut);
 ```
