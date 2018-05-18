@@ -53,7 +53,7 @@ class WaitGroup implements ArrayAccess
     /**
      * @return WaitGroup
      */
-    public static function make(): WaitGroup
+    public static function create(): WaitGroup
     {
         return new static();
     }

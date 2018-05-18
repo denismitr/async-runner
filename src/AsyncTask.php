@@ -3,19 +3,15 @@
 namespace Denismitr\Async;
 
 /**
- * Class TaskAbstract
+ * Class AsyncTask
  * @package Denismitr\Async
  */
-abstract class TaskAbstract
+abstract class AsyncTask
 {
-    abstract public function configure();
-
     abstract function run();
 
     public function __invoke()
     {
-        $this->configure();
-
         return $this->run();
     }
 }

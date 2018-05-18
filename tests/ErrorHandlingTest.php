@@ -15,7 +15,7 @@ class ErrorHandlingTest extends TestCase
     /** @test */
     public function it_can_handle_exceptions_via_catch_callback()
     {
-        $pool = WaitGroup::make();
+        $pool = WaitGroup::create();
 
         foreach (range(1, 5) as $i) {
             $pool->add(function () {
@@ -36,7 +36,7 @@ class ErrorHandlingTest extends TestCase
         $this->expectException(TestException::class);
         $this->expectExceptionMessageRegExp('/test/');
 
-        $pool = WaitGroup::make();
+        $pool = WaitGroup::create();
 
         $pool->add(function () {
             throw new TestException('test');
@@ -51,7 +51,7 @@ class ErrorHandlingTest extends TestCase
         $this->expectException(Error::class);
         $this->expectExceptionMessageRegExp('/test/');
 
-        $pool = WaitGroup::make();
+        $pool = WaitGroup::create();
 
         $pool->add(function () {
             throw new Error('test');
@@ -63,7 +63,7 @@ class ErrorHandlingTest extends TestCase
     /** @test */
     public function it_handles_stderr_as_parallel_error()
     {
-        $pool = WaitGroup::make();
+        $pool = WaitGroup::create();
 
         $pool->add(function () {
             fwrite(STDERR, 'test');
@@ -77,7 +77,7 @@ class ErrorHandlingTest extends TestCase
     /** @test */
     public function deep_syntax_errors_are_thrown()
     {
-        $pool = WaitGroup::make();
+        $pool = WaitGroup::create();
 
         $pool->add(function () {
             new ClassWithSyntaxError();

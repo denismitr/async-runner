@@ -3,11 +3,11 @@
 use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Contracts\Runnable;
 use Denismitr\Async\Runtime\RuntimeManager;
-use Denismitr\Async\TaskAbstract;
+use Denismitr\Async\AsyncTask;
 
 if (! function_exists('async')) {
     /**
-     * @param TaskAbstract|callable $task
+     * @param AsyncTask|callable $task
      * @return Runnable
      */
     function async($task): Runnable

@@ -6,7 +6,7 @@ namespace Denismitr\Async\Tests;
 use Denismitr\Async\Tests\Stubs\Invokable;
 use Denismitr\Async\Tests\Stubs\NonInvokable;
 use Denismitr\Async\Tests\Stubs\TestClass;
-use Denismitr\Async\Tests\Stubs\TestTask;
+use Denismitr\Async\Tests\Stubs\TestAsyncTask;
 use Denismitr\Async\WaitGroup;
 use Denismitr\Async\Process\SynchronousProcess;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +33,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_tun_processes_in_parallel()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $this->stopwatch->start('test');
 
@@ -57,7 +57,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_handle_success()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
         $profit = 0;
 
         foreach (range(1, 10) as $i) {
@@ -76,7 +76,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_handle_timeout()
     {
-        $wg = WaitGroup::make()
+        $wg = WaitGroup::create()
             ->setTimeout(1);
 
         $counter = 0;
@@ -97,7 +97,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_handle_a_maximum_of_concurrent_processes()
     {
-        $wg = WaitGroup::make()
+        $wg = WaitGroup::create()
             ->concurrency(2);
 
         $startTime = microtime(true);
@@ -121,7 +121,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_works_with_helper_functions()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $counter = 0;
 
@@ -142,7 +142,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_use_a_class_from_the_parent_process()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         /** @var TestClass $result */
         $result = null;
@@ -166,7 +166,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_returns_all_the_output_as_an_array()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $result = null;
 
@@ -185,9 +185,9 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_work_with_tasks()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
-        $wg[] = async(new TestTask());
+        $wg[] = async(new TestAsyncTask(2));
 
         $results = await($wg);
 
@@ -197,9 +197,9 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_accept_tasks_with_wg_add()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
-        $wg->add(new TestTask());
+        $wg->add(new TestAsyncTask(2));
 
         $results = await($wg);
 
@@ -215,7 +215,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_can_run_invokable_classes()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $wg->add(new Invokable());
 
@@ -228,14 +228,14 @@ class WaitGroupTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $wg->add(new NonInvokable());
     }
 
     public function it_can_run_synchronous_processes()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $this->stopwatch->start('test');
 
@@ -260,9 +260,9 @@ class WaitGroupTest extends TestCase
     {
         WaitGroup::$forceSync = true;
 
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
-        $wg[] = async(new TestTask())->then(function ($output) {
+        $wg[] = async(new TestAsyncTask(0))->then(function ($output) {
             $this->assertEquals(0, $output);
         });
 
@@ -274,7 +274,7 @@ class WaitGroupTest extends TestCase
     /** @test */
     public function it_takes_an_intermediate_callback()
     {
-        $wg = WaitGroup::make();
+        $wg = WaitGroup::create();
 
         $wg[] = async(function () {
             return 1;

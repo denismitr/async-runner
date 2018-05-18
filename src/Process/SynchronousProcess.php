@@ -4,7 +4,7 @@ namespace Denismitr\Async\Process;
 
 
 use Denismitr\Async\Exceptions\SerializableException;
-use Denismitr\Async\TaskAbstract;
+use Denismitr\Async\AsyncTask;
 use Throwable;
 use Denismitr\Async\Contracts\Runnable;
 
@@ -73,7 +73,7 @@ class SynchronousProcess extends ProcessAbstract
         try {
             $startTime = microtime(true);
 
-            $this->output = $this->task instanceof TaskAbstract
+            $this->output = $this->task instanceof AsyncTask
                 ? $this->task->run()
                 : call_user_func($this->task);
 
