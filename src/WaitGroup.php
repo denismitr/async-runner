@@ -10,12 +10,12 @@ use Denismitr\Async\Runtime\RuntimeManager;
 use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
-class WaitGroup implements ArrayAccess
+class WaitGroup
 {
     /** @var bool */
-    public static $forceSync = false;
+    protected $forceSync = false;
 
-    protected $concurrency = 20;
+    protected $maxConcurrently = 20;
     protected $tasksPerProcess = 1;
     protected $timeout = 300;
     protected $sleepTime = 50000;
@@ -65,8 +65,7 @@ class WaitGroup implements ArrayAccess
     {
         return
             function_exists('pcntl_async_signals')
-            && function_exists('posix_kill')
-            && ! self::$forceSync;
+            && function_exists('posix_kill');
     }
 
     /**
@@ -81,12 +80,12 @@ class WaitGroup implements ArrayAccess
     }
 
     /**
-     * @param int $concurrency
+     * @param int $maxConcurrently
      * @return WaitGroup
      */
-    public function concurrency(int $concurrency): self
+    public function setMaxConcurrently(int $maxConcurrently): self
     {
-        $this->concurrency = $concurrency;
+        $this->maxConcurrently = $maxConcurrently;
 
         return $this;
     }
@@ -126,7 +125,7 @@ class WaitGroup implements ArrayAccess
         }
 
         if ( ! $process instanceof Runnable ) {
-            $process = RuntimeManager::createProcess($process);
+            $process = RuntimeManager::createProcess($process, $this->forceSync);
         }
 
         $this->putInQueue($process);
@@ -135,10 +134,9 @@ class WaitGroup implements ArrayAccess
     }
 
     /**
-     * @param callable|null $intermediateCallback
      * @return array
      */
-    public function wait(?callable $intermediateCallback = null): array
+    public function wait(): array
     {
         while ($this->inProgress) {
             foreach ($this->inProgress as $process) {
@@ -153,10 +151,6 @@ class WaitGroup implements ArrayAccess
 
             if ( ! $this->inProgress) {
                 break;
-            }
-
-            if ($intermediateCallback) {
-                call_user_func_array($intermediateCallback, [$this]);
             }
 
             usleep($this->sleepTime);
@@ -190,7 +184,7 @@ class WaitGroup implements ArrayAccess
 
         $this->update();
 
-        $this->results[] = $process->triggerSuccess();
+        $this->results[$process->getId()] = $process->triggerSuccess();
         $this->finished[$process->getPid()] = $process;
     }
 
@@ -220,26 +214,6 @@ class WaitGroup implements ArrayAccess
         $process->triggerError();
 
         $this->failed[$process->getPid()] = $process;
-    }
-
-    public function offsetExists($offset)
-    {
-        return false;
-    }
-
-    public function offsetGet($offset)
-    {
-        // TODO: Implement offsetGet() method.
-    }
-
-    public function offsetSet($offset, $task)
-    {
-        $this->add($task);
-    }
-
-    public function offsetUnset($offset)
-    {
-        // TODO: Implement offsetUnset() method.
     }
 
     /**
@@ -300,9 +274,14 @@ class WaitGroup implements ArrayAccess
         return $this->state;
     }
 
+    public function forceSync(): void
+    {
+        $this->forceSync = true;
+    }
+
     protected function update(): void
     {
-        if (count($this->inProgress) >= $this->concurrency) {
+        if (count($this->inProgress) >= $this->maxConcurrently) {
             return;
         }
 

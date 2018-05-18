@@ -77,28 +77,28 @@ class WaitGroupTest extends TestCase
     public function it_can_handle_timeout()
     {
         $wg = WaitGroup::create()
-            ->setTimeout(1);
+            ->setTimeout(3);
 
-        $counter = 0;
+        $timedOut = 0;
 
         foreach (range(1, 5) as $i) {
-            $wg->add(function () {
-                sleep(2);
-            })->timeout(function () use (&$counter) {
-                $counter += 1;
+            $wg->add(function () use ($i) {
+                sleep($i);
+            })->timeout(function () use (&$timedOut) {
+                $timedOut += 1;
             });
         }
 
         $wg->wait();
 
-        $this->assertEquals(5, $counter, (string) $wg->state());
+        $this->assertEquals(3, $timedOut, (string) $wg->state());
     }
 
     /** @test */
     public function it_can_handle_a_maximum_of_concurrent_processes()
     {
         $wg = WaitGroup::create()
-            ->concurrency(2);
+            ->setMaxConcurrently(2);
 
         $startTime = microtime(true);
 
@@ -119,27 +119,6 @@ class WaitGroupTest extends TestCase
     }
 
     /** @test */
-    public function it_works_with_helper_functions()
-    {
-        $wg = WaitGroup::create();
-
-        $counter = 0;
-
-        foreach (range(1, 5) as $i) {
-            $wg[] = async(function () {
-                usleep(random_int(10, 1000));
-                return 2;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output;
-            });
-        }
-
-        await($wg);
-
-        $this->assertEquals(10, $counter, (string) $wg->state());
-    }
-
-    /** @test */
     public function it_can_use_a_class_from_the_parent_process()
     {
         $wg = WaitGroup::create();
@@ -147,7 +126,7 @@ class WaitGroupTest extends TestCase
         /** @var TestClass $result */
         $result = null;
 
-        $wg[] = async(function () {
+        $wg->add(function () {
             $class = new TestClass();
 
             $class->property = true;
@@ -157,7 +136,7 @@ class WaitGroupTest extends TestCase
             $result = $class;
         });
 
-        await($wg);
+        $wg->wait();
 
         $this->assertInstanceOf(TestClass::class, $result);
         $this->assertTrue($result->property);
@@ -171,12 +150,12 @@ class WaitGroupTest extends TestCase
         $result = null;
 
         foreach (range(1, 5) as $i) {
-            $wg[] = async(function () {
+            $wg->add(function () {
                 return 2;
             });
         }
 
-        $result = await($wg);
+        $result = $wg->wait();
 
         $this->assertCount(5, $result);
         $this->assertEquals(10, array_sum($result));
@@ -187,17 +166,18 @@ class WaitGroupTest extends TestCase
     {
         $wg = WaitGroup::create();
 
-        $wg[] = async(new TestAsyncTask('foo', 1000));
-        $wg[] = async(new TestAsyncTask('bar'));
+        $wg->add(new TestAsyncTask('foo', 1000));
+        $wg->add(new TestAsyncTask('bar'));
 
-        $results = await($wg);
+
+        $results = $wg->wait();
 
         $this->assertContains('foo', $results);
         $this->assertContains('bar', $results);
     }
 
     /** @test */
-    public function it_can_accept_tasks_with_wg_add()
+    public function it_can_iterate_over_results()
     {
         $wg = WaitGroup::create();
 
@@ -217,6 +197,40 @@ class WaitGroupTest extends TestCase
     }
 
     /** @test */
+    public function results_are_stored_by_id()
+    {
+        $wg = WaitGroup::create();
+
+        $idA = $wg->add(new TestAsyncTask('foo', 200))->getId();
+        $idB = $wg->add(new TestAsyncTask('bar', 1000))->getId();
+        $idC = $wg->add(new TestAsyncTask('baz', 400))->getId();
+
+        $results = $wg->wait();
+
+        $this->assertEquals('foo', $results[$idA]);
+        $this->assertEquals('bar', $results[$idB]);
+        $this->assertEquals('baz', $results[$idC]);
+    }
+
+    /** @test */
+    public function synced_results_are_stored_by_id()
+    {
+        $wg = WaitGroup::create();
+
+        $wg->forceSync();
+
+        $idA = $wg->add(new TestAsyncTask('foo', 200))->getId();
+        $idB = $wg->add(new TestAsyncTask('bar', 1000))->getId();
+        $idC = $wg->add(new TestAsyncTask('baz', 400))->getId();
+
+        $results = $wg->wait();
+
+        $this->assertEquals('foo', $results[$idA]);
+        $this->assertEquals('bar', $results[$idB]);
+        $this->assertEquals('baz', $results[$idC]);
+    }
+
+    /** @test */
     public function it_can_check_for_asynchronous_support()
     {
         $this->assertTrue(WaitGroup::isSupported());
@@ -227,10 +241,11 @@ class WaitGroupTest extends TestCase
     {
         $wg = WaitGroup::create();
 
-        $wg->add(new Invokable());
+        $id = $wg->add(new Invokable(2))->getId();
 
-        $results = await($wg);
-        $this->assertEquals(2, $results[0]);
+        $results = $wg->wait();
+
+        $this->assertEquals(2, $results[$id]);
     }
 
     /** @test */
@@ -251,7 +266,8 @@ class WaitGroupTest extends TestCase
 
         foreach (range(1, 3) as $i) {
             $wg->add(new SynchronousProcess(function () {
-                sleep(1);
+                usleep(100);
+
                 return 2;
             }, $i))->then(function ($output) {
                 $this->assertEquals(2, $output);
@@ -266,36 +282,16 @@ class WaitGroupTest extends TestCase
     }
 
     /** @test */
-    public function it_will_automatically_schedule_synchronous_tasks_if_pcntl_not_supported()
+    public function it_will_automatically_schedule_synchronous_tasks_when_must_be_sync()
     {
-        WaitGroup::$forceSync = true;
-
         $wg = WaitGroup::create();
 
-        $wg[] = async(new TestAsyncTask(0))->then(function ($output) {
+        $wg->forceSync();
+
+        $wg->add(new TestAsyncTask(0))->then(function ($output) {
             $this->assertEquals(0, $output);
         });
 
-        await($wg);
-
-        WaitGroup::$forceSync = false;
-    }
-
-    /** @test */
-    public function it_takes_an_intermediate_callback()
-    {
-        $wg = WaitGroup::create();
-
-        $wg[] = async(function () {
-            return 1;
-        });
-
-        $isIntermediateCallbackCalled = false;
-
-        $wg->wait(function (WaitGroup $wg) use (&$isIntermediateCallbackCalled) {
-            $isIntermediateCallbackCalled = true;
-        });
-
-        $this->assertTrue($isIntermediateCallbackCalled);
+        $wg->wait();
     }
 }
