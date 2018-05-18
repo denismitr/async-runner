@@ -14,20 +14,20 @@ composer require denismitr/async-runner
 
 ```php
 $wg = WaitGroup::create();
-$profit = 0;
+$counter = 0;
 
 foreach (range(1, 10) as $i) {
     $wg->add(function () {
         usleep(200); // some action here that takes time
         return 5;
-    })->then(function (int $result) use (&$profit) {
-        $profit += $result;
+    })->then(function (int $result) use (&$counter) {
+        $counter += $result;
     });
 }
 
 $wg->wait();
 
-echo $profit; // 50
+$counter; // 50
 ```
 Example with AsyncTask inheritance
 ```php
