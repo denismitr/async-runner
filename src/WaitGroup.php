@@ -15,7 +15,7 @@ class WaitGroup
     /** @var bool */
     protected $forceSync = false;
 
-    protected $concurrency = 20;
+    protected $maxConcurrently = 20;
     protected $tasksPerProcess = 1;
     protected $timeout = 300;
     protected $sleepTime = 50000;
@@ -80,12 +80,12 @@ class WaitGroup
     }
 
     /**
-     * @param int $concurrency
+     * @param int $maxConcurrently
      * @return WaitGroup
      */
-    public function concurrency(int $concurrency): self
+    public function setMaxConcurrently(int $maxConcurrently): self
     {
-        $this->concurrency = $concurrency;
+        $this->maxConcurrently = $maxConcurrently;
 
         return $this;
     }
@@ -134,10 +134,9 @@ class WaitGroup
     }
 
     /**
-     * @param callable|null $intermediateCallback
      * @return array
      */
-    public function wait(?callable $intermediateCallback = null): array
+    public function wait(): array
     {
         while ($this->inProgress) {
             foreach ($this->inProgress as $process) {
@@ -152,10 +151,6 @@ class WaitGroup
 
             if ( ! $this->inProgress) {
                 break;
-            }
-
-            if ($intermediateCallback) {
-                call_user_func_array($intermediateCallback, [$this]);
             }
 
             usleep($this->sleepTime);
@@ -286,7 +281,7 @@ class WaitGroup
 
     protected function update(): void
     {
-        if (count($this->inProgress) >= $this->concurrency) {
+        if (count($this->inProgress) >= $this->maxConcurrently) {
             return;
         }
 

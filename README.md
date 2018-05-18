@@ -56,3 +56,21 @@ foreach($results as $result) {
     // gives 2 results of 2 async tasks
 }
 ```
+
+You can pass an intermediate callback to wait command
+
+```php
+$wg = WaitGroup::create();
+
+$wg->add(function () {
+    return 1;
+});
+
+$isIntermediateCallbackCalled = false;
+
+$wg->wait(function (WaitGroup $wg) use (&$isIntermediateCallbackCalled) {
+    $isIntermediateCallbackCalled = true;
+});
+
+$this->assertTrue($isIntermediateCallbackCalled);
+```

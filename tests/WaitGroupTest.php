@@ -98,7 +98,7 @@ class WaitGroupTest extends TestCase
     public function it_can_handle_a_maximum_of_concurrent_processes()
     {
         $wg = WaitGroup::create()
-            ->concurrency(2);
+            ->setMaxConcurrently(2);
 
         $startTime = microtime(true);
 
@@ -116,27 +116,6 @@ class WaitGroupTest extends TestCase
 
         $this->assertGreaterThanOrEqual(2, $executionTime, "Execution time was {$executionTime}, expected more than 2.\n".(string) $wg->state());
         $this->assertCount(3, $wg->getFinished(), (string) $wg->state());
-    }
-
-    /** @test */
-    public function it_works_with_helper_functions()
-    {
-        $wg = WaitGroup::create();
-
-        $counter = 0;
-
-        foreach (range(1, 5) as $i) {
-            $wg->add(function () {
-                usleep(random_int(10, 1000));
-                return 2;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output;
-            });
-        }
-
-        $wg->wait();
-
-        $this->assertEquals(10, $counter, (string) $wg->state());
     }
 
     /** @test */
@@ -314,23 +293,5 @@ class WaitGroupTest extends TestCase
         });
 
         $wg->wait();
-    }
-
-    /** @test */
-    public function it_takes_an_intermediate_callback()
-    {
-        $wg = WaitGroup::create();
-
-        $wg->add(function () {
-            return 1;
-        });
-
-        $isIntermediateCallbackCalled = false;
-
-        $wg->wait(function (WaitGroup $wg) use (&$isIntermediateCallbackCalled) {
-            $isIntermediateCallbackCalled = true;
-        });
-
-        $this->assertTrue($isIntermediateCallbackCalled);
     }
 }
