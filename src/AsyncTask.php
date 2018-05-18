@@ -8,7 +8,7 @@ namespace Denismitr\Async;
  */
 abstract class AsyncTask
 {
-    abstract function run();
+    abstract public function run();
 
     public function __invoke()
     {

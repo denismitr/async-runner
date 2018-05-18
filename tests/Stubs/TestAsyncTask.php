@@ -7,15 +7,19 @@ use Denismitr\Async\AsyncTask;
 
 class TestAsyncTask extends AsyncTask
 {
-    protected $i;
+    protected $value;
+    protected $sleep;
 
-    public function __construct(int $i)
+    public function __construct($value, $sleep = 500)
     {
-        $this->i = $i;
+        $this->value = $value;
+        $this->sleep = $sleep;
     }
 
-    function run()
+    public function run()
     {
-        return $this->i;
+        usleep($this->sleep);
+
+        return $this->value;
     }
 }

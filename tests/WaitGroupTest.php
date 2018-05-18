@@ -187,11 +187,13 @@ class WaitGroupTest extends TestCase
     {
         $wg = WaitGroup::create();
 
-        $wg[] = async(new TestAsyncTask(2));
+        $wg[] = async(new TestAsyncTask('foo', 1000));
+        $wg[] = async(new TestAsyncTask('bar'));
 
         $results = await($wg);
 
-        $this->assertEquals(2, $results[0]);
+        $this->assertEquals('foo', $results[0]);
+        $this->assertEquals('bar', $results[1]);
     }
 
     /** @test */
