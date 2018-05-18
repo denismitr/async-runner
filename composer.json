@@ -21,9 +21,6 @@
         "symfony/stopwatch": "^4.0"
     },
     "autoload": {
-        "files": [
-            "src/helpers.php"
-        ],
         "psr-4": {
             "Denismitr\\Async\\": "src/"
         }

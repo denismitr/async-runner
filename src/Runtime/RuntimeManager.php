@@ -57,13 +57,13 @@ class RuntimeManager
         self::$isInitialised = true;
     }
 
-    public static function createProcess($task): Runnable
+    public static function createProcess($task, $forceSync = false): Runnable
     {
         if ( ! self::$isInitialised) {
             self::init();
         }
 
-        if ( ! WaitGroup::isSupported()) {
+        if ( ! WaitGroup::isSupported() || $forceSync === true) {
             return SynchronousProcess::create($task, self::getId());
         }
 

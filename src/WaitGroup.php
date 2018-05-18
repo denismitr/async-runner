@@ -10,10 +10,10 @@ use Denismitr\Async\Runtime\RuntimeManager;
 use InvalidArgumentException;
 use Denismitr\Async\Contracts\Runnable;
 
-class WaitGroup implements ArrayAccess
+class WaitGroup
 {
     /** @var bool */
-    public static $forceSync = false;
+    protected $forceSync = false;
 
     protected $concurrency = 20;
     protected $tasksPerProcess = 1;
@@ -65,8 +65,7 @@ class WaitGroup implements ArrayAccess
     {
         return
             function_exists('pcntl_async_signals')
-            && function_exists('posix_kill')
-            && ! self::$forceSync;
+            && function_exists('posix_kill');
     }
 
     /**
@@ -126,7 +125,7 @@ class WaitGroup implements ArrayAccess
         }
 
         if ( ! $process instanceof Runnable ) {
-            $process = RuntimeManager::createProcess($process);
+            $process = RuntimeManager::createProcess($process, $this->forceSync);
         }
 
         $this->putInQueue($process);
@@ -190,7 +189,7 @@ class WaitGroup implements ArrayAccess
 
         $this->update();
 
-        $this->results[] = $process->triggerSuccess();
+        $this->results[$process->getId()] = $process->triggerSuccess();
         $this->finished[$process->getPid()] = $process;
     }
 
@@ -220,26 +219,6 @@ class WaitGroup implements ArrayAccess
         $process->triggerError();
 
         $this->failed[$process->getPid()] = $process;
-    }
-
-    public function offsetExists($offset)
-    {
-        return false;
-    }
-
-    public function offsetGet($offset)
-    {
-        // TODO: Implement offsetGet() method.
-    }
-
-    public function offsetSet($offset, $task)
-    {
-        $this->add($task);
-    }
-
-    public function offsetUnset($offset)
-    {
-        // TODO: Implement offsetUnset() method.
     }
 
     /**
@@ -298,6 +277,11 @@ class WaitGroup implements ArrayAccess
     public function state(): State
     {
         return $this->state;
+    }
+
+    public function forceSync(): void
+    {
+        $this->forceSync = true;
     }
 
     protected function update(): void
