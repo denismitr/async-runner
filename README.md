@@ -4,6 +4,12 @@
 
 ### Run PHP tasks asynchronously with the PCNTL extension
 
+### Installation
+
+```bash
+composer require denismitr/async-runner
+```
+
 ### Usage
 
 ```php
